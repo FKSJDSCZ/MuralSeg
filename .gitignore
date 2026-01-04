@@ -114,7 +114,11 @@ data
 *.pkl.json
 *.log.json
 work_dirs/
+runs/
 mmseg/.mim
 
 # Pytorch
 *.pth
+
+#WandB
+wandb/

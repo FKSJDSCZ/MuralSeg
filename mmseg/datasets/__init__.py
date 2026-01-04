@@ -15,6 +15,7 @@ from .hrf import HRFDataset
 from .hsi_drive import HSIDrive20Dataset
 from .isaid import iSAIDDataset
 from .isprs import ISPRSDataset
+from .kizil import KizilDataset
 from .levir import LEVIRCDDataset
 from .lip import LIPDataset
 from .loveda import LoveDADataset
@@ -48,7 +49,7 @@ __all__ = [
     'PascalContextDataset', 'PascalContextDataset59', 'ChaseDB1Dataset',
     'DRIVEDataset', 'HRFDataset', 'STAREDataset', 'DarkZurichDataset',
     'NightDrivingDataset', 'COCOStuffDataset', 'LoveDADataset',
-    'MultiImageMixDataset', 'iSAIDDataset', 'ISPRSDataset', 'PotsdamDataset',
+    'MultiImageMixDataset', 'iSAIDDataset', 'ISPRSDataset', 'PotsdamDataset', 'KizilDataset',
     'LoadAnnotations', 'RandomCrop', 'SegRescale', 'PhotoMetricDistortion',
     'RandomRotate', 'AdjustGamma', 'CLAHE', 'Rerange', 'RGB2Gray',
     'RandomCutOut', 'RandomMosaic', 'PackSegInputs', 'ResizeToMultiple',
