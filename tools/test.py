@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import os
-import os.path as osp
+from pathlib import Path
 
 from mmengine.config import Config, DictAction
 from mmengine.runner import Runner
@@ -10,43 +10,55 @@ from mmengine.runner import Runner
 # TODO: support fuse_conv_bn, visualization, and format_only
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='MMSeg test (and eval) a model')
+        description='MMSeg test (and eval) a model',
+    )
     parser.add_argument('config', help='train config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument(
         '--work-dir',
         help=('if specified, the evaluation metric results will be dumped'
-              'into the directory as json'))
+              'into the directory as json'),
+    )
     parser.add_argument(
         '--out',
         type=str,
-        help='The directory to save output prediction for offline evaluation')
+        help='The directory to save output prediction for offline evaluation',
+    )
     parser.add_argument(
-        '--show', action='store_true', help='show prediction results')
+        '--draw', action='store_true', help='draw prediction results',
+    )
+    parser.add_argument(
+        '--show', action='store_true', help='show prediction results',
+    )
     parser.add_argument(
         '--show-dir',
         help='directory where painted images will be saved. '
-        'If specified, it will be automatically saved '
-        'to the work_dir/timestamp/show_dir')
+             'If specified, it will be automatically saved '
+             'to the work_dir/timestamp/show_dir',
+    )
     parser.add_argument(
-        '--wait-time', type=float, default=2, help='the interval of show (s)')
+        '--wait-time', type=float, default=2, help='the interval of show (s)',
+    )
     parser.add_argument(
         '--cfg-options',
         nargs='+',
         action=DictAction,
         help='override some settings in the used config, the key-value pair '
-        'in xxx=yyy format will be merged into config file. If the value to '
-        'be overwritten is a list, it should be like key="[a,b]" or key=a,b '
-        'It also allows nested list/tuple values, e.g. key="[(a,b),(c,d)]" '
-        'Note that the quotation marks are necessary and that no white space '
-        'is allowed.')
+             'in xxx=yyy format will be merged into config file. If the value to '
+             'be overwritten is a list, it should be like key="[a,b]" or key=a,b '
+             'It also allows nested list/tuple values, e.g. key="[(a,b),(c,d)]" '
+             'Note that the quotation marks are necessary and that no white space '
+             'is allowed.',
+    )
     parser.add_argument(
         '--launcher',
         choices=['none', 'pytorch', 'slurm', 'mpi'],
         default='none',
-        help='job launcher')
+        help='job launcher',
+    )
     parser.add_argument(
-        '--tta', action='store_true', help='Test time augmentation')
+        '--tta', action='store_true', help='Test time augmentation',
+    )
     # When using PyTorch version >= 2.0.0, the `torch.distributed.launch`
     # will pass the `--local-rank` parameter to `tools/train.py` instead
     # of `--local_rank`.
@@ -63,7 +75,8 @@ def trigger_visualization_hook(cfg, args):
     if 'visualization' in default_hooks:
         visualization_hook = default_hooks['visualization']
         # Turn on visualization
-        visualization_hook['draw'] = True
+        if args.draw:
+            visualization_hook['draw'] = True
         if args.show:
             visualization_hook['show'] = True
             visualization_hook['wait_time'] = args.wait_time
@@ -74,7 +87,8 @@ def trigger_visualization_hook(cfg, args):
         raise RuntimeError(
             'VisualizationHook must be included in default_hooks.'
             'refer to usage '
-            '"visualization=dict(type=\'VisualizationHook\')"')
+            '"visualization=dict(type=\'VisualizationHook\')"',
+        )
 
     return cfg
 
@@ -88,19 +102,23 @@ def main():
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
 
+    config_filename = Path(args.config).stem
     # work_dir is determined in this priority: CLI > segment in file > filename
     if args.work_dir is not None:
         # update configs according to CLI args if args.work_dir is not None
         cfg.work_dir = args.work_dir
-    elif cfg.get('work_dir', None) is None:
+    else:
         # use config filename as default work_dir if cfg.work_dir is None
-        cfg.work_dir = osp.join('./work_dirs',
-                                osp.splitext(osp.basename(args.config))[0])
+        cfg.work_dir = str(Path("./runs/tests") / config_filename)
+
+    # disable wandb
+    vis_backends = cfg.visualizer.vis_backends
+    for vis_backend in vis_backends:
+        if vis_backend.type in ['WandbVisBackend', 'MyWandbVisBackend']:
+            vis_backends.remove(vis_backend)
 
     cfg.load_from = args.checkpoint
-
-    if args.show or args.show_dir:
-        cfg = trigger_visualization_hook(cfg, args)
+    cfg = trigger_visualization_hook(cfg, args)
 
     if args.tta:
         cfg.test_dataloader.dataset.pipeline = cfg.tta_pipeline

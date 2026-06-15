@@ -1,0 +1,35 @@
+{
+    "source_mode": "random",
+    "layout_mode": "cols",
+    "image_dir": "data/kizil/images/test",
+    "label_dir": "data/kizil/labels/test",
+    "models": {
+        "EDAFormer": "runs/tests/edaformer_eft-t_2xb8-80k_kizil-512x512/20260322_193907/vis_data/vis_image",
+        "FeedFormer": "runs/tests/feedformer_mit-b0_2xb8-80k_kizil-512x512/20260322_193822/vis_data/vis_image",
+        "OffSeg": "runs/tests/offseg_efficientformerv2-s1_2xb8-80k_kizil-512x512/20260322_194043/vis_data/vis_image",
+        "SegFormer": "runs/tests/segformer_mit-b0_2xb8-80k_kizil-512x512/20260322_193653/vis_data/vis_image",
+        "SegNeXt": "runs/tests/segnext_mscan-t_2xb8-80k_kizil-512x512/20260322_193736/vis_data/vis_image",
+        "U-MixFormer": "runs/tests/umixformer_mit-b0_2xb8-80k_kizil-512x512/20260322_193957/vis_data/vis_image",
+        "Ours": "runs/tests/mit-b0_biagent-hy-interp-bid-q-ddpu-dwc-out128_4xb4-80k_kizil-512x512/20260322_160542/vis_data/vis_image"
+    },
+    "num_images": 10,
+    "seed": "",
+    "alpha": 0.5,
+    "palette": [
+        [119,11,32],
+        [107,142,35],
+        [0,60,100],
+        [0,0,142],
+        [81,0,81],
+        [250,170,30],
+        [150,120,90]
+    ],
+    "target_height": 512,
+    "gap": 16,
+    "margin": 24,
+    "text_padding": 12,
+    "font_size": 40,
+    "box_width": 3,
+    "font_path": null,
+    "output_path": "vis/compare/kizil.png"
+}

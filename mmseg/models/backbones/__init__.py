@@ -4,12 +4,18 @@ from .bisenetv1 import BiSeNetV1
 from .bisenetv2 import BiSeNetV2
 from .cgnet import CGNet
 from .ddrnet import DDRNet
+from .efficientformerv2 import (efficientformerv2_s0_feat, efficientformerv2_s1_feat, efficientformerv2_s2_feat,
+                                efficientformerv2_l_feat)
+from .eft import EFT_T, EFT_B
 from .erfnet import ERFNet
 from .fast_scnn import FastSCNN
 from .hrnet import HRNet
 from .icnet import ICNet
+from .lvt import lvt
 from .mae import MAE
 from .mit import MixVisionTransformer
+from .mit_glda import MixVisionTransformerGlda, MixVisionTransformerTmx, MixVisionTransformerGldaTmx
+from .mit_ds import DSMixVisionTransformer
 from .mobilenet_v2 import MobileNetV2
 from .mobilenet_v3 import MobileNetV3
 from .mscan import MSCAN
@@ -29,7 +35,10 @@ __all__ = [
     'ResNet', 'ResNetV1c', 'ResNetV1d', 'ResNeXt', 'HRNet', 'FastSCNN',
     'ResNeSt', 'MobileNetV2', 'UNet', 'CGNet', 'MobileNetV3',
     'VisionTransformer', 'SwinTransformer', 'MixVisionTransformer',
+    'MixVisionTransformerGlda', 'MixVisionTransformerTmx', 'MixVisionTransformerGldaTmx',
+    'DSMixVisionTransformer', 'EFT_T', 'EFT_B',
     'BiSeNetV1', 'BiSeNetV2', 'ICNet', 'TIMMBackbone', 'ERFNet', 'PCPVT',
     'SVT', 'STDCNet', 'STDCContextPathNet', 'BEiT', 'MAE', 'PIDNet', 'MSCAN',
-    'DDRNet', 'VPD'
+    'DDRNet', 'VPD', 'efficientformerv2_s0_feat', 'efficientformerv2_s1_feat',
+    'efficientformerv2_s2_feat', 'efficientformerv2_l_feat', 'lvt',
 ]

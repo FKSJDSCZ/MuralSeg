@@ -40,6 +40,8 @@ def main():
     if args.work_dir is not None:
         mkdir_or_exist(osp.abspath(args.work_dir))
         json_file = osp.join(args.work_dir, f'fps_{timestamp}.json')
+    elif cfg.get('work_dir', None) is not None:
+        json_file = osp.join(cfg.work_dir, f'fps_{timestamp}.json')
     else:
         # use config filename as default work_dir if cfg.work_dir is None
         work_dir = osp.join('./work_dirs',

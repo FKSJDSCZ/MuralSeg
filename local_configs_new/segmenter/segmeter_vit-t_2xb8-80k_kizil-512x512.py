@@ -1,0 +1,145 @@
+_base_ = [
+    '../_base_/datasets/kizil.py',
+    '../_base_/runtime/default_runtime.py',
+]
+
+# dataset
+train_dataloader = dict(batch_size=8)
+val_evaluator = dict(
+    type='IoUMetric',
+    iou_metrics=['mIoU', 'mDice', 'mFscore'],
+)
+test_evaluator = val_evaluator
+
+# model
+norm_cfg = dict(type='LN', eps=1e-6, requires_grad=True)
+checkpoint = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/segmenter/vit_tiny_p16_384_20220308-cce8c795.pth'  # noqa
+model = dict(  # Runner arg
+    type='EncoderDecoder',
+    data_preprocessor={{_base_.data_preprocessor}},
+    pretrained=checkpoint,
+    backbone=dict(
+        type='VisionTransformer',
+        img_size=(512, 512),
+        patch_size=16,
+        in_channels=3,
+        embed_dims=192,
+        num_layers=12,
+        num_heads=3,
+        drop_path_rate=0.1,
+        attn_drop_rate=0.0,
+        drop_rate=0.0,
+        final_norm=True,
+        norm_cfg=norm_cfg,
+        with_cls_token=True,
+        interpolate_mode='bicubic',
+    ),
+    decode_head=dict(
+        type='SegmenterMaskTransformerHead',
+        in_channels=192,
+        channels=192,
+        num_classes={{_base_.dataset_classes}},
+        num_layers=2,
+        num_heads=3,
+        embed_dims=192,
+        dropout_ratio=0.0,
+        loss_decode=dict(
+            type='CrossEntropyLoss',
+            use_sigmoid=False,
+            loss_weight=1.0,
+            avg_non_ignore=True,
+        ),
+    ),
+    # model training and testing settings
+    train_cfg=dict(),
+    test_cfg=dict(mode='slide', crop_size=(512, 512), stride=(480, 480)),
+)
+
+# schedule
+schedule_total_step = 80000
+schedule_warmup_step = 1500
+schedule_val_interval = 500
+schedule_log_interval = 50
+schedule_checkpoint_interval = 500
+schedule_max_lr = 6e-5
+# optimizer
+optim_wrapper = dict(  # Runner kwarg
+    type='AmpOptimWrapper',
+    optimizer=dict(
+        type='AdamW',
+        lr=schedule_max_lr,
+        betas=(0.9, 0.999),
+        weight_decay=0.01,
+    ),
+    paramwise_cfg=dict(
+        custom_keys={
+            'norm': dict(decay_mult=0.),
+        },
+    ),
+)
+# learning policy
+param_scheduler = [  # Runner kwarg
+    dict(
+        type='LinearLR',
+        start_factor=1e-3,
+        end=schedule_warmup_step,
+        by_epoch=False,
+    ),
+    dict(
+        type='PolyLR',
+        eta_min=0.,
+        power=1.,
+        begin=schedule_warmup_step,
+        end=schedule_total_step,
+        by_epoch=False,
+    ),
+]
+# training schedule
+train_cfg = dict(  # Runner kwarg
+    type='IterBasedTrainLoop',
+    max_iters=schedule_total_step,
+    val_interval=schedule_val_interval,
+)
+val_cfg = dict(type='ValLoop')  # Runner kwarg
+test_cfg = dict(type='TestLoop')  # Runner kwarg
+default_hooks = dict(  # Runner kwarg
+    checkpoint=dict(
+        type='MyCheckpointHook',
+        interval=schedule_checkpoint_interval,
+        by_epoch=False,
+        max_keep_ckpts=1,
+        save_best=['mIoU', 'mDice'],
+        rule='greater',
+    ),
+    logger=dict(
+        type='MyLoggerHook',
+        interval=schedule_log_interval,
+        log_metric_by_epoch=False,
+    ),
+    param_scheduler=dict(type='ParamSchedulerHook'),
+    timer=dict(type='IterTimerHook'),
+    sampler_seed=dict(type='DistSamplerSeedHook'),
+    runtime_info=dict(type='RuntimeInfoHook'),
+    visualization=dict(
+        type='MySegVisualizationHook',
+        interval=5,
+    ),
+)
+
+# runtime
+wandb_project = "muralseg-ablation"
+wandb_notes = {{_base_.dataset_notes}}
+visualizer = dict(  # Runner kwarg
+    type='MySegLocalVisualizer',
+    vis_backends=[
+        dict(type='MyLocalVisBackend'),
+        dict(
+            type='MyWandbVisBackend',
+            init_kwargs=dict(
+                resume='allow',
+            ),
+        ),
+    ],
+    name='visualizer',
+    alpha=0.5,
+)

@@ -1,4 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from .visualization_hook import SegVisualizationHook
+from .checkpoint_hook import MyCheckpointHook
+from .visualization_hook import SegVisualizationHook, MySegVisualizationHook
+from .logger_hook import MyLoggerHook
 
-__all__ = ['SegVisualizationHook']
+__all__ = ['MyCheckpointHook', 'SegVisualizationHook', 'MySegVisualizationHook', 'MyLoggerHook']

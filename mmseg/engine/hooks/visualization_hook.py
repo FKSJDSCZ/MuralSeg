@@ -127,3 +127,68 @@ class SegVisualizationHook(Hook):
                 show=self.show,
                 wait_time=self.wait_time,
                 step=self._test_index)
+
+
+@HOOKS.register_module()
+class MySegVisualizationHook(SegVisualizationHook):
+    """Segmentation Visualization Hook. Used to visualize validation and
+    testing process prediction results.
+
+    In the testing phase:
+
+    1. If ``show`` is True, it means that only the prediction results are
+        visualized without storing data, so ``vis_backends`` needs to
+        be excluded.
+
+    Args:
+        draw (bool): whether to draw prediction results. If it is False,
+            it means that no drawing will be done. Defaults to False.
+        interval (int): The interval of visualization. Defaults to 50.
+        show (bool): Whether to display the drawn image. Default to False.
+        wait_time (float): The interval of show (s). Defaults to 0.
+        backend_args (dict, Optional): Arguments to instantiate a file backend.
+            See https://mmengine.readthedocs.io/en/latest/api/fileio.htm
+            for details. Defaults to None.
+            Notes: mmcv>=2.0.0rc4, mmengine>=0.2.0 required.
+    """
+
+    def __init__(self,
+                 draw: bool = False,
+                 interval: int = 50,
+                 show: bool = False,
+                 wait_time: float = 0.,
+                 backend_args: Optional[dict] = None):
+        super().__init__(draw, interval, show, wait_time, backend_args)
+
+    def after_test_iter(self, runner: Runner, batch_idx: int, data_batch: dict,
+                        outputs: Sequence[SegDataSample]) -> None:
+        """Run after every testing iterations.
+
+        Args:
+            runner (:obj:`Runner`): The runner of the testing process.
+            batch_idx (int): The index of the current batch in the val loop.
+            data_batch (dict): Data from dataloader.
+            outputs (Sequence[:obj:`SegDataSample`]): A batch of data samples
+                that contain annotations and predictions.
+        """
+        if not self.draw:
+            return
+
+        for data_sample in outputs:
+            self._test_index += 1
+
+            if self._test_index % self.interval == 0:
+                img_path = data_sample.img_path
+                window_name = osp.basename(img_path)
+                img_bytes = get(img_path, backend_args=self.backend_args)
+                img = mmcv.imfrombytes(img_bytes, channel_order='rgb')
+
+                self._visualizer.add_datasample(
+                    window_name,
+                    img,
+                    data_sample=data_sample,
+                    draw_gt=False,
+                    show=self.show,
+                    wait_time=self.wait_time,
+                    step=self._test_index
+                )

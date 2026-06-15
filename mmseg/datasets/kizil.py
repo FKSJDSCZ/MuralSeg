@@ -7,12 +7,11 @@ class KizilDataset(BaseSegDataset):
     """Kizil Cave-Temple Complex dataset.
 
     In segmentation map annotation for Kizil Cave-Temple Complex dataset, 0 is the background index.
-    ``reduce_zero_label`` should be set to False. The ``img_suffix`` and
-    ``seg_map_suffix`` are both fixed to '.png'.
+    ``reduce_zero_label`` should be set to True. The ``img_suffix`` and ``seg_map_suffix`` are both fixed to '.png'.
     """
     METAINFO = dict(
         classes=(
-            'background',
+            # 'background',
             'incomplete mural',
             'exposed mud layers',
             'exposed rock layers',
@@ -21,7 +20,7 @@ class KizilDataset(BaseSegDataset):
             'hole',
         ),
         palette=[
-            [119, 11, 32],  # background
+            # [119, 11, 32],  # background
             [107, 142, 35],  # incomplete mural
             [0, 60, 100],  # exposed mud layers
             [0, 0, 142],  # exposed rock layers
@@ -34,7 +33,7 @@ class KizilDataset(BaseSegDataset):
     def __init__(self,
                  img_suffix='.png',
                  seg_map_suffix='.png',
-                 reduce_zero_label=False,
+                 reduce_zero_label=True,
                  **kwargs) -> None:
         super().__init__(
             img_suffix=img_suffix,
