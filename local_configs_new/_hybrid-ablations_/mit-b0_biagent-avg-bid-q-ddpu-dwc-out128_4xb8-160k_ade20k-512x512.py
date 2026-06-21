@@ -13,27 +13,30 @@ test_evaluator = val_evaluator
 
 # model
 norm_cfg = dict(type='SyncBN', requires_grad=True)
-checkpoint = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/segnext/mscan_t_20230227-119e8c9f.pth'  # noqa
-# checkpoint = 'pretrained/MSCAN-T.pth'
+checkpoint = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/segformer/mit_b0_20220624-7e0fe6dd.pth'  # noqa
 model = dict(  # Runner arg
     type='EncoderDecoder',
     data_preprocessor={{_base_.data_preprocessor}},
     pretrained=None,
     backbone=dict(
-        type='MSCAN',
-        init_cfg=dict(type='Pretrained', checkpoint=checkpoint),
-        embed_dims=[32, 64, 160, 256],
-        mlp_ratios=[8, 8, 4, 4],
+        type='MixVisionTransformer',
+        in_channels=3,
+        num_stages=4,
+        patch_sizes=[7, 3, 3, 3],
+        sr_ratios=[8, 4, 2, 1],
+        out_indices=(0, 1, 2, 3),
+        mlp_ratio=4,
+        qkv_bias=True,
         drop_rate=0.0,
+        attn_drop_rate=0.0,
         drop_path_rate=0.1,
-        depths=[3, 3, 5, 2],
-        attention_kernel_sizes=[5, [1, 7], [1, 11], [1, 21]],
-        attention_kernel_paddings=[2, [0, 3], [0, 5], [0, 10]],
-        act_cfg=dict(type='GELU'),
-        norm_cfg=norm_cfg,
+        init_cfg=dict(type='Pretrained', checkpoint=checkpoint),  # mit-b0
+        embed_dims=32,  # mit-b0
+        num_heads=[1, 2, 5, 8],  # mit-b0
+        num_layers=[2, 2, 2, 2],  # mit-b0
     ),
     decode_head=dict(
-        type='BiAgentHeadForMSCAN',
+        type='BiAgentHead',
         in_index=[0, 1, 2, 3],
         dropout_ratio=0.1,
         norm_cfg=norm_cfg,
@@ -44,17 +47,17 @@ model = dict(  # Runner arg
             loss_weight=1.0,
             avg_non_ignore=True,
         ),
-        in_channels=[32, 64, 160, 256],
+        in_channels=[32, 64, 160, 256],  # mit-b0
         channels=128,
         num_classes={{_base_.dataset_classes}},
         # head specified
-        num_heads=(8, 5, 2),  # [s4,s3,s2,s1]
-        pool_ratio=(1, 2, 4),  # for CatKey, aligns [c4,c3,c2,c1] -> c4
-        agent_shapes=(7, 7, 7),
-        agent_token_type='hybrid',  # {'avgpool','edge_pool','learnable','hybrid'}
+        num_heads=(8, 5, 2, 1),  # [s4,s3,s2,s1]
+        pool_ratio=(1, 2, 4, 8),  # for CatKey, aligns [c4,c3,c2,c1] -> c4
+        agent_shapes=(7, 7, 7, 7),
+        agent_token_type='avgpool',  # {'avgpool','edge_pool','learnable','hybrid'}
         bias_type='none',  # {'interp','crpb','none'}
         crpb_hidden_dim=16,
-        mlp_ratios=((4, 4), (4, 4), (4, 4)),
+        mlp_ratios=((2, 4), (2, 4), (2, 4), (2, 4)),
         drop=0.0,
         attn_drop=0.0,
         drop_path=0.1,
@@ -79,10 +82,10 @@ schedule_warmup_step = 1500
 schedule_val_interval = 500
 schedule_log_interval = 50
 schedule_checkpoint_interval = 500
-schedule_max_lr = 1e-4
+schedule_max_lr = 6e-5
 # optimizer
 optim_wrapper = dict(  # Runner kwarg
-    type='OptimWrapper',
+    type='AmpOptimWrapper',
     optimizer=dict(
         type='AdamW',
         lr=schedule_max_lr,
@@ -147,7 +150,7 @@ default_hooks = dict(  # Runner kwarg
 )
 
 # runtime
-wandb_project = "muralseg-ablation"
+wandb_project = "muralseg-hybrid-ablation"
 wandb_notes = {{_base_.dataset_notes}}
 visualizer = dict(  # Runner kwarg
     type='MySegLocalVisualizer',

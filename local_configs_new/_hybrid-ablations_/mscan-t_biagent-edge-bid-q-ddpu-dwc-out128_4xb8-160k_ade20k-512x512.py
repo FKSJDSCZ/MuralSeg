@@ -51,7 +51,7 @@ model = dict(  # Runner arg
         num_heads=(8, 5, 2),  # [s4,s3,s2,s1]
         pool_ratio=(1, 2, 4),  # for CatKey, aligns [c4,c3,c2,c1] -> c4
         agent_shapes=(7, 7, 7),
-        agent_token_type='hybrid',  # {'avgpool','edge_pool','learnable','hybrid'}
+        agent_token_type='edge_pool',  # {'avgpool','edge_pool','learnable','hybrid'}
         bias_type='none',  # {'interp','crpb','none'}
         crpb_hidden_dim=16,
         mlp_ratios=((4, 4), (4, 4), (4, 4)),
@@ -79,7 +79,7 @@ schedule_warmup_step = 1500
 schedule_val_interval = 500
 schedule_log_interval = 50
 schedule_checkpoint_interval = 500
-schedule_max_lr = 1e-4
+schedule_max_lr = 6e-5
 # optimizer
 optim_wrapper = dict(  # Runner kwarg
     type='OptimWrapper',
@@ -147,7 +147,7 @@ default_hooks = dict(  # Runner kwarg
 )
 
 # runtime
-wandb_project = "muralseg-ablation"
+wandb_project = "muralseg-hybrid-ablation"
 wandb_notes = {{_base_.dataset_notes}}
 visualizer = dict(  # Runner kwarg
     type='MySegLocalVisualizer',
