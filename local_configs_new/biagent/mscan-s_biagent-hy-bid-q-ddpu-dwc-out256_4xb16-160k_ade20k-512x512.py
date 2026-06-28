@@ -4,7 +4,7 @@ _base_ = [
 ]
 
 # dataset
-train_dataloader = dict(batch_size=8)
+train_dataloader = dict(batch_size=16)
 val_evaluator = dict(
     type='IoUMetric',
     iou_metrics=['mIoU', 'mDice', 'mFscore'],
@@ -13,7 +13,7 @@ test_evaluator = val_evaluator
 
 # model
 norm_cfg = dict(type='SyncBN', requires_grad=True)
-checkpoint = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/segnext/mscan_t_20230227-119e8c9f.pth'  # noqa
+checkpoint = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/segnext/mscan_s_20230227-f33ccdf2.pth'  # noqa
 # checkpoint = 'pretrained/MSCAN-T.pth'
 model = dict(  # Runner arg
     type='EncoderDecoder',
@@ -22,11 +22,11 @@ model = dict(  # Runner arg
     backbone=dict(
         type='MSCAN',
         init_cfg=dict(type='Pretrained', checkpoint=checkpoint),
-        embed_dims=[32, 64, 160, 256],
+        embed_dims=[64, 128, 320, 512],
         mlp_ratios=[8, 8, 4, 4],
         drop_rate=0.0,
         drop_path_rate=0.1,
-        depths=[3, 3, 5, 2],
+        depths=[2, 2, 4, 2],
         attention_kernel_sizes=[5, [1, 7], [1, 11], [1, 21]],
         attention_kernel_paddings=[2, [0, 3], [0, 5], [0, 10]],
         act_cfg=dict(type='GELU'),
@@ -44,8 +44,8 @@ model = dict(  # Runner arg
             loss_weight=1.0,
             avg_non_ignore=True,
         ),
-        in_channels=[32, 64, 160, 256],
-        channels=128,
+        in_channels=[64, 128, 320, 512],
+        channels=256,
         num_classes={{_base_.dataset_classes}},
         # head specified
         num_heads=(8, 5, 2),  # [s4,s3,s2,s1]
@@ -66,7 +66,7 @@ model = dict(  # Runner arg
         use_dwc=True,
         dwc_kernel_size=3,
         use_boundary_prior=True,
-        boundary_mid_channels=64,
+        boundary_mid_channels=128,
     ),
     # model training and testing settings
     train_cfg=dict(),
@@ -79,7 +79,7 @@ schedule_warmup_step = 1500
 schedule_val_interval = 500
 schedule_log_interval = 50
 schedule_checkpoint_interval = 500
-schedule_max_lr = 1.2e-4
+schedule_max_lr = 6e-5
 # optimizer
 optim_wrapper = dict(  # Runner kwarg
     type='OptimWrapper',
