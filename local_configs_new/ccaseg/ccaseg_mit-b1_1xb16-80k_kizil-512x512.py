@@ -45,7 +45,6 @@ model = dict(  # Runner arg
         num_classes={{_base_.dataset_classes}},
         norm_cfg=norm_cfg,
         align_corners=False,
-        decoder_params=dict(embed_dim=256),
         loss_decode=dict(
             type='CrossEntropyLoss',
             use_sigmoid=False,

@@ -290,9 +290,6 @@ class CCASegHead_mit(BaseDecodeHead):
 
         c1_in_channels, c2_in_channels, c3_in_channels, c4_in_channels = self.in_channels
 
-        decoder_params = kwargs['decoder_params']
-        embedding_dim = decoder_params['embed_dim']
-
         # F1-Pooling Module
         self.down1_1 = PyramidPoolAgg(stride=2, dim=c1_in_channels)  # feature size = 64*64
         self.down1_2 = PyramidPoolAgg(stride=4, dim=c1_in_channels)  # feature size = 32*32
@@ -351,7 +348,7 @@ class CCASegHead_mit(BaseDecodeHead):
 
         self.linear_fuse = ConvModule(
             in_channels=(c4_in_channels),
-            out_channels=embedding_dim,
+            out_channels=self.channels,
             kernel_size=1,
             norm_cfg=dict(type='SyncBN', requires_grad=True)
         )
