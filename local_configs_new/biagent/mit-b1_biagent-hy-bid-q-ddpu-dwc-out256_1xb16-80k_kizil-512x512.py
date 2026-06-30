@@ -36,7 +36,7 @@ model = dict(  # Runner arg
         num_layers=[2, 2, 2, 2],  # mit-b1
     ),
     decode_head=dict(
-        type='UMixFormerAblationHead',
+        type='BiAgentHead',
         in_index=[0, 1, 2, 3],
         dropout_ratio=0.1,
         norm_cfg=norm_cfg,
@@ -48,33 +48,28 @@ model = dict(  # Runner arg
             avg_non_ignore=True,
         ),
         in_channels=[64, 128, 320, 512],  # mit-b1
-        channels=128,
+        channels=256,
         num_classes={{_base_.dataset_classes}},
         # head specified
-        feature_strides=[4, 8, 16, 32],
-        embed_dim=128,
-        # ablation
-        use_hssma=False,
-        use_elar=False,
-        # baseline umixformer
-        num_heads=(8, 5, 2, 1),  # s4->s1
-        pool_ratio=(1, 2, 4, 8),  # s4->s1
-        attn_pool_ratio=(8, 4, 2, 1),  # s4->s1（保持官方参数形式）
-        mlp_ratio=4.0,
-        drop_path_rate=0.1,
-        # HSSMA replacement (only used if use_hssma=True)
-        hssma_num_heads=8,
-        hssma_sr_ratio=(1, 1, 4, 8),  # s4->s1：用于KV spatial reduction，和分辨率比例一致
-        hssma_gate_channels=64,
-        hssma_mlp_ratio=4,
-        hssma_use_div_loss=False,
-        hssma_div_loss_weight=0.3,
-        # Feature alignment for HSSMA sources
-        downsample_mode='avg',
-        interpolate_mode='bilinear',
-        # ELAR (only used if use_elar=True)
-        elar_kernel_size=5,
-        elar_num_iters=1,
+        num_heads=(8, 5, 2, 1),  # [s4,s3,s2,s1]
+        pool_ratio=(1, 2, 4, 8),  # for CatKey, aligns [c4,c3,c2,c1] -> c4
+        agent_shapes=(7, 7, 7, 7),
+        agent_token_type='hybrid',  # {'avgpool','edge_pool','learnable','hybrid'}
+        bias_type='none',  # {'interp','crpb','none'}
+        crpb_hidden_dim=16,
+        mlp_ratios=((2, 4), (2, 4), (2, 4), (2, 4)),
+        drop=0.0,
+        attn_drop=0.0,
+        drop_path=0.1,
+        qkv_bias=True,
+        use_bidirectional=True,
+        share_agent_tokens=False,
+        feedback_q_concat=True,
+        use_ddpu=True,
+        use_dwc=True,
+        dwc_kernel_size=3,
+        use_boundary_prior=True,
+        boundary_mid_channels=128,
     ),
     # model training and testing settings
     train_cfg=dict(),
@@ -90,7 +85,7 @@ schedule_checkpoint_interval = 500
 schedule_max_lr = 6e-5
 # optimizer
 optim_wrapper = dict(  # Runner kwarg
-    type='AmpOptimWrapper',
+    type='OptimWrapper',
     optimizer=dict(
         type='AdamW',
         lr=schedule_max_lr,

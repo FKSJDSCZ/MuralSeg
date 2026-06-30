@@ -8,6 +8,7 @@ from .biagent_head import BiAgentHead, BiAgentHeadForMSCAN
 from .bisap_head import BiSAPHead
 from .cara_head import UAgentFormer, CARAHead
 from .cc_head import CCHead
+from .ccaseg_head import CCASegHead_mit
 from .da_head import DAHead
 from .dag_head import DAGHead
 from .dbr_head import DBRHead
@@ -69,4 +70,5 @@ __all__ = [
     'LightHamHead', 'PIDHead', 'DDRHead', 'VPDDepthHead', 'SideAdapterCLIPHead', 'APSAHead',
     'EDAFormerHead', 'FeedFormerHead', 'OffSegHead', 'PLCAHead', 'UAgentFormer', 'CARAHead',
     'AAMAHead', 'EHCAHead', 'BiSAPHead', 'DSOHead', 'BiAgentHead', 'BiAgentHeadForMSCAN',
+    'CCASegHead_mit',
 ]

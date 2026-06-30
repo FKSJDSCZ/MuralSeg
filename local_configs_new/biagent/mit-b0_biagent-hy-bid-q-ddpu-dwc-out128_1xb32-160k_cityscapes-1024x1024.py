@@ -1,10 +1,10 @@
 _base_ = [
-    '../_base_/datasets/kizil.py',
+    '../_base_/datasets/cityscapes.py',
     '../_base_/runtime/default_runtime.py',
 ]
 
 # dataset
-train_dataloader = dict(batch_size=16)
+train_dataloader = dict(batch_size=32)
 val_evaluator = dict(
     type='IoUMetric',
     iou_metrics=['mIoU', 'mDice', 'mFscore'],
@@ -13,7 +13,7 @@ test_evaluator = val_evaluator
 
 # model
 norm_cfg = dict(type='SyncBN', requires_grad=True)
-checkpoint = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/segformer/mit_b1_20220624-02e5a6a1.pth'  # noqa
+checkpoint = 'https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/segformer/mit_b0_20220624-7e0fe6dd.pth'  # noqa
 model = dict(  # Runner arg
     type='EncoderDecoder',
     data_preprocessor={{_base_.data_preprocessor}},
@@ -30,13 +30,13 @@ model = dict(  # Runner arg
         drop_rate=0.0,
         attn_drop_rate=0.0,
         drop_path_rate=0.1,
-        init_cfg=dict(type='Pretrained', checkpoint=checkpoint),  # mit-b1
-        embed_dims=64,  # mit-b1
-        num_heads=[1, 2, 5, 8],  # mit-b1
-        num_layers=[2, 2, 2, 2],  # mit-b1
+        init_cfg=dict(type='Pretrained', checkpoint=checkpoint),  # mit-b0
+        embed_dims=32,  # mit-b0
+        num_heads=[1, 2, 5, 8],  # mit-b0
+        num_layers=[2, 2, 2, 2],  # mit-b0
     ),
     decode_head=dict(
-        type='UMixFormerAblationHead',
+        type='BiAgentHead',
         in_index=[0, 1, 2, 3],
         dropout_ratio=0.1,
         norm_cfg=norm_cfg,
@@ -47,42 +47,37 @@ model = dict(  # Runner arg
             loss_weight=1.0,
             avg_non_ignore=True,
         ),
-        in_channels=[64, 128, 320, 512],  # mit-b1
+        in_channels=[32, 64, 160, 256],  # mit-b0
         channels=128,
         num_classes={{_base_.dataset_classes}},
         # head specified
-        feature_strides=[4, 8, 16, 32],
-        embed_dim=128,
-        # ablation
-        use_hssma=False,
-        use_elar=False,
-        # baseline umixformer
-        num_heads=(8, 5, 2, 1),  # s4->s1
-        pool_ratio=(1, 2, 4, 8),  # s4->s1
-        attn_pool_ratio=(8, 4, 2, 1),  # s4->s1（保持官方参数形式）
-        mlp_ratio=4.0,
-        drop_path_rate=0.1,
-        # HSSMA replacement (only used if use_hssma=True)
-        hssma_num_heads=8,
-        hssma_sr_ratio=(1, 1, 4, 8),  # s4->s1：用于KV spatial reduction，和分辨率比例一致
-        hssma_gate_channels=64,
-        hssma_mlp_ratio=4,
-        hssma_use_div_loss=False,
-        hssma_div_loss_weight=0.3,
-        # Feature alignment for HSSMA sources
-        downsample_mode='avg',
-        interpolate_mode='bilinear',
-        # ELAR (only used if use_elar=True)
-        elar_kernel_size=5,
-        elar_num_iters=1,
+        num_heads=(8, 5, 2, 1),  # [s4,s3,s2,s1]
+        pool_ratio=(1, 2, 4, 8),  # for CatKey, aligns [c4,c3,c2,c1] -> c4
+        agent_shapes=(7, 7, 7, 7),
+        agent_token_type='hybrid',  # {'avgpool','edge_pool','learnable','hybrid'}
+        bias_type='none',  # {'interp','crpb','none'}
+        crpb_hidden_dim=16,
+        mlp_ratios=((2, 4), (2, 4), (2, 4), (2, 4)),
+        drop=0.0,
+        attn_drop=0.0,
+        drop_path=0.1,
+        qkv_bias=True,
+        use_bidirectional=True,
+        share_agent_tokens=False,
+        feedback_q_concat=True,
+        use_ddpu=True,
+        use_dwc=True,
+        dwc_kernel_size=3,
+        use_boundary_prior=True,
+        boundary_mid_channels=64,
     ),
     # model training and testing settings
     train_cfg=dict(),
-    test_cfg=dict(mode='whole'),
+    test_cfg=dict(mode='slide', crop_size=(1024, 1024), stride=(768, 768)),
 )
 
 # schedule
-schedule_total_step = 80000
+schedule_total_step = 160000
 schedule_warmup_step = 1500
 schedule_val_interval = 500
 schedule_log_interval = 50
@@ -172,5 +167,5 @@ visualizer = dict(  # Runner kwarg
     alpha=0.5,
 )
 randomness = dict(
-    seed=3407,
+    seed=114514,
 )

@@ -36,45 +36,22 @@ model = dict(  # Runner arg
         num_layers=[2, 2, 2, 2],  # mit-b1
     ),
     decode_head=dict(
-        type='UMixFormerAblationHead',
+        type='CCASegHead_mit',
+        in_channels=[64, 128, 320, 512],  # mit-b1
         in_index=[0, 1, 2, 3],
+        feature_strides=[4, 8, 16, 32],
+        channels=256,
         dropout_ratio=0.1,
+        num_classes={{_base_.dataset_classes}},
         norm_cfg=norm_cfg,
         align_corners=False,
+        decoder_params=dict(embed_dim=256),
         loss_decode=dict(
             type='CrossEntropyLoss',
             use_sigmoid=False,
             loss_weight=1.0,
             avg_non_ignore=True,
         ),
-        in_channels=[64, 128, 320, 512],  # mit-b1
-        channels=128,
-        num_classes={{_base_.dataset_classes}},
-        # head specified
-        feature_strides=[4, 8, 16, 32],
-        embed_dim=128,
-        # ablation
-        use_hssma=False,
-        use_elar=False,
-        # baseline umixformer
-        num_heads=(8, 5, 2, 1),  # s4->s1
-        pool_ratio=(1, 2, 4, 8),  # s4->s1
-        attn_pool_ratio=(8, 4, 2, 1),  # s4->s1（保持官方参数形式）
-        mlp_ratio=4.0,
-        drop_path_rate=0.1,
-        # HSSMA replacement (only used if use_hssma=True)
-        hssma_num_heads=8,
-        hssma_sr_ratio=(1, 1, 4, 8),  # s4->s1：用于KV spatial reduction，和分辨率比例一致
-        hssma_gate_channels=64,
-        hssma_mlp_ratio=4,
-        hssma_use_div_loss=False,
-        hssma_div_loss_weight=0.3,
-        # Feature alignment for HSSMA sources
-        downsample_mode='avg',
-        interpolate_mode='bilinear',
-        # ELAR (only used if use_elar=True)
-        elar_kernel_size=5,
-        elar_num_iters=1,
     ),
     # model training and testing settings
     train_cfg=dict(),
@@ -90,7 +67,7 @@ schedule_checkpoint_interval = 500
 schedule_max_lr = 6e-5
 # optimizer
 optim_wrapper = dict(  # Runner kwarg
-    type='AmpOptimWrapper',
+    type='OptimWrapper',
     optimizer=dict(
         type='AdamW',
         lr=schedule_max_lr,
